@@ -35,6 +35,8 @@
 #include "ctkXnatAssessorFolder.h"
 #include "ctkXnatReconstruction.h"
 #include "ctkXnatReconstructionFolder.h"
+#include "ctkXnatSubject.h"
+#include "ctkXnatExperiment.h"
 
 ctkXnatTreeBrowserMainWindow::ctkXnatTreeBrowserMainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -45,7 +47,7 @@ ctkXnatTreeBrowserMainWindow::ctkXnatTreeBrowserMainWindow(QWidget *parent) :
   ui->setupUi(this);
 
   ui->treeView->setModel(m_TreeModel);
-  ui->downloadLabel->hide();
+  ui->infoLabel->setText("");
 
   this->connect(ui->loginButton, SIGNAL(clicked()), SLOT(loginButtonPushed()));
   this->connect(ui->treeView, SIGNAL(clicked(const QModelIndex&)), SLOT(itemSelected(const QModelIndex&)));
@@ -74,7 +76,7 @@ void ctkXnatTreeBrowserMainWindow::loginButtonPushed()
     m_Session = 0;
     ui->loginButton->setText("Login");
     ui->loginLabel->setText("Disconnected");
-    ui->downloadLabel->hide();
+    ui->infoLabel->setText("");
   }
   else
   {
@@ -85,12 +87,11 @@ void ctkXnatTreeBrowserMainWindow::loginButtonPushed()
       if (m_Session)
       {
         ui->loginButton->setText("Logout");
-        ui->loginLabel->setText(QString("Connected: %1").arg(m_Session->url().toString()));
+        ui->loginLabel->setText(QString("Connected to %1").arg(m_Session->url().toString()));
 
         ctkXnatDataModel* dataModel = m_Session->dataModel();
         m_TreeModel->addDataModel(dataModel);
         ui->treeView->reset();
-        ui->downloadLabel->show();
       }
     }
   }
@@ -109,7 +110,34 @@ void ctkXnatTreeBrowserMainWindow::itemSelected(const QModelIndex &index)
   downloadable |= dynamic_cast<ctkXnatReconstruction*>(xnatObject)!=NULL;
   downloadable |= dynamic_cast<ctkXnatReconstructionFolder*>(xnatObject)!=NULL;
   ui->downloadButton->setEnabled(downloadable);
-  ui->downloadLabel->setVisible(!downloadable);
+    
+    QString info;
+    
+    ctkXnatProject* proj = dynamic_cast<ctkXnatProject*>(xnatObject);
+    if (proj!=NULL)
+    {
+        info=QString("Project: %1, PI: %2 %3").arg(proj->id(), proj->piFirstName(), proj->piLastName());
+    }
+    
+    ctkXnatSubject* subj = dynamic_cast<ctkXnatSubject*>(xnatObject);
+    if (subj!=NULL)
+    {
+        info=QString("Subject: %1").arg(subj->label());
+    }
+    
+    ctkXnatExperiment* expm = dynamic_cast<ctkXnatExperiment*>(xnatObject);
+    if (expm!=NULL)
+    {
+        info=QString("Experiment: %1").arg(expm->label());
+    }
+    
+    ctkXnatScan* scan = dynamic_cast<ctkXnatScan*>(xnatObject);
+    if (scan!=NULL)
+    {
+        info=QString("Scan: %1 - %2").arg(scan->id(),scan->type());
+    }
+    
+    ui->infoLabel->setText(info);
 }
 
 void ctkXnatTreeBrowserMainWindow::downloadButtonClicked()
