@@ -83,6 +83,8 @@ ctkXnatLoginDialog::ctkXnatLoginDialog(QWidget* parent, Qt::WindowFlags flags)
     // Create connections after setting defaults, so you don't trigger stuff when setting defaults.
     this->createConnections();
     }
+    
+    saveProfile("localhost",true); // Make available a default localhost test profile for the user
 }
 
 //----------------------------------------------------------------------------
@@ -278,10 +280,10 @@ bool ctkXnatLoginDialog::askToSaveProfile(const QString& profileName)
 }
 
 //----------------------------------------------------------------------------
-void ctkXnatLoginDialog::saveProfile(const QString& profileName)
+void ctkXnatLoginDialog::saveProfile(const QString& profileName, bool testProfile)
 {
   Q_D(ctkXnatLoginDialog);
-
+  
   ctkXnatLoginProfile* profile = d->Profiles[profileName];
   bool oldProfileWasDefault = profile && profile->isDefault();
   if (!profile)
@@ -301,7 +303,16 @@ void ctkXnatLoginDialog::saveProfile(const QString& profileName)
     d->Model.setData(d->Model.index(idx), profileName);
     }
 
-  this->storeProfile(*profile);
+  if (testProfile) // Setup a default localhost test profile for the user if this flag is set
+  {
+      profile->setName(profileName);
+      profile->setServerUrl(QString("http://localhost:8080/xnat"));
+      profile->setUserName("admin");
+      profile->setPassword("admin");
+      profile->setDefault(true);
+  }
+  else
+      this->storeProfile(*profile);
 
   // If the profile is to be default then remove the default flag from the other profiles.
   // This code assumes that the newly created profiles are not default.
@@ -429,3 +440,6 @@ void ctkXnatLoginDialog::onFieldChanged()
   d->Dirty = true;
   ui->btnSave->setEnabled(true);
 }
+
+
+

@@ -65,7 +65,7 @@ private:
   void createConnections();
   void blockSignalsOfFields(bool value);
 
-  void saveProfile(const QString& profileName);
+  void saveProfile(const QString& profileName, bool testProfile=false);
   bool askToSaveProfile(const QString& profileName);
   void loadProfile(const ctkXnatLoginProfile& profile = ctkXnatLoginProfile());
   void storeProfile(ctkXnatLoginProfile& profile);
